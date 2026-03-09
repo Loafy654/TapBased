@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAP-IN | Intelligent Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --panel: #111827;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --text: #f9fafb;
+            --text-mute: #9ca3af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* --- MINIMALIST LOGIN --- */
+        #login-screen {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top right, #1e1b4b, #030712);
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        .logo-icon {
+            width: 60px; height: 60px;
+            background: var(--accent);
+            margin: 0 auto 1.5rem;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px var(--accent-glow);
+            font-weight: 800; font-size: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--accent); background: rgba(255,255,255,0.07); }
+
+        .btn-prime {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-prime:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+
+        /* --- DASHBOARD --- */
+        #main-ui { display: none; opacity: 0; }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            background: var(--panel);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 2rem;
+        }
+
+        .content-area {
+            margin-left: 260px;
+            padding: 3rem;
+        }
+
+        .tab-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: var(--text-mute);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+        }
+
+        .view-section { display: none; animation: slideFade 0.5s ease-out forwards; }
+        @keyframes slideFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- TABLE & CARDS --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: var(--panel);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .data-table tr { background: var(--panel); }
+        .data-table td, .data-table th { padding: 16px; }
+        .data-table tr td:first-child { border-radius: 12px 0 0 12px; }
+        .data-table tr td:last-child { border-radius: 0 12px 12px 0; }
+
+        .status-dot {
+            height: 8px; width: 8px; border-radius: 50%;
+            display: inline-block; margin-right: 8px;
+        }
+
+        .pulse { animation: shadowPulse 2s infinite; }
+        @keyframes shadowPulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .history-tag {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+            background: rgba(255,255,255,0.05); color: var(--text-mute);
+        }
+
+    </style>
+</head>
+<body>
+
+    <section id="login-screen">
+        <div class="glass-card">
+            <div class="logo-icon">T</div>
+            <h2 style="margin-bottom: 0.5rem">Welcome Back</h2>
+            <p style="color: var(--text-mute); font-size: 0.9rem; margin-bottom: 2rem;">Authorized Access Only</p>
+            <input type="text" id="u" placeholder="Admin Username">
+            <input type="password" id="p" placeholder="Security Password">
+            <button class="btn-prime" onclick="attemptLogin()">AUTHENTICATE</button>
+            <p id="err" style="color: var(--danger); font-size: 0.8rem; margin-top: 1rem;"></p>
+        </div>
+    </section>
+
+    <div id="main-ui">
+        <div class="sidebar">
+            <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 2.5rem; color: var(--accent);">TAP-IN OS</div>
+            <button class="tab-btn active" onclick="showView('attendance')">Live Attendance</button>
+            <button class="tab-btn" onclick="showView('history')">March History</button>
+            <button class="tab-btn" onclick="showView('february')">February Archive</button>
+            <button class="tab-btn" onclick="showView('summary')">Analytics</button>
+            
+            <div style="position: absolute; bottom: 2rem; width: calc(100% - 4rem);">
+                <button class="tab-btn" onclick="location.reload()" style="color: var(--danger)">Sign Out</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            
+            <div id="attendance" class="view-section" style="display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+                    <div>
+                        <h1 style="margin:0">Active Session</h1>
+                        <p style="color: var(--text-mute)">Live monitoring for March 10, 2026</p>
+                    </div>
+                    <div class="stat-box" style="padding: 10px 20px;">
+                        <span class="status-dot" style="background: var(--success)"></span> System Online
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box"><h4>Present Now</h4><p id="count-in" style="font-size: 2rem; font-weight: 800; margin:0">0</p></div>
+                    <div class="stat-box"><h4>Pending Out</h4><p id="count-pending" style="font-size: 2rem; font-weight: 800; margin:0; color: var(--warning)">0</p></div>
+                    <div class="stat-box"><h4>Early Bird</h4><p style="font-size: 1.2rem; font-weight: 800; margin:0">Juan D.</p></div>
+                </div>
+
+                <table class="data-table">
+                    <thead><tr style="color: var(--text-mute); text-align: left;"><th>Student</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
+                    <tbody id="live-table"></tbody>
+                </table>
+            </div>
+
+            <div id="history" class="view-section">
+                <h1>March 2026 History</h1>
+                <p>Logs from March 1 to March 9</p>
+                <table class="data-table" id="march-history-table"></table>
+            </div>
+
+            <div id="february" class="view-section">
+                <h1>February Archive</h1>
+                <div class="stat-box" style="margin-bottom: 2rem;">
+                    <p>Monthly Reliability: <strong>98.4%</strong></p>
+                </div>
+                <table class="data-table" id="feb-table"></table>
+            </div>
+
+            <div id="summary" class="view-section">
+                <h1>Analytics Summary</h1>
+                <div class="stats-grid">
+                    <div class="stat-box"><h4>Peak Arrival</h4><p>7:45 AM</p></div>
+                    <div class="stat-box"><h4>Avg Stay</h4><p>8.5 Hours</p></div>
+                    <div class="stat-box"><h4>Late Pct.</h4><p>4.2%</p></div>
+                </div>
+                <div class="stat-box" style="height: 200px; display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,255,255,0.1)">
+                    [ Graph Visualization: Attendance Trends ]
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const liveData = [
+            { name: "Juan Dela Cruz", in: "07:30 AM", out: "04:30 PM", status: "Done" },
+            { name: "Maria Clara", in: "07:45 AM", out: null, status: "Active" },
+            { name: "Jose Rizal", in: "08:10 AM", out: null, status: "Active" },
+            { name: "Andres Bonifacio", in: null, out: null, status: "Scanning" },
+            { name: "Emilio Aguinaldo", in: "07:15 AM", out: "03:00 PM", status: "Done" }
+        ];
+
+        const historyData = [
+            { date: "Mar 09", name: "Santi Lopez", in: "08:00 AM", out: "05:00 PM" },
+            { date: "Mar 08", name: "Liza Soberano", in: "07:55 AM", out: "04:55 PM" },
+            { date: "Feb 28", name: "Antonio Luna", in: "07:30 AM", out: "04:00 PM", month: "Feb" },
+            { date: "Feb 27", name: "Melchora Aquino", in: "08:15 AM", out: "05:15 PM", month: "Feb" }
+        ];
+
+        function attemptLogin() {
+            const user = document.getElementById('u').value;
+            const pass = document.getElementById('p').value;
+
+            // Hidden logic as requested
+            if(user === "Edison Tan" && pass === "Pass123") {
+                document.getElementById('login-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-ui').style.display = 'block';
+                    setTimeout(() => { document.getElementById('main-ui').style.opacity = '1'; }, 50);
+                    renderAll();
+                }, 500);
+            } else {
+                document.getElementById('err').innerText = "Security Breach: Identity not recognized.";
+            }
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(viewId).style.display = 'block';
+            event.currentTarget.classList.add('active');
+        }
+
+        function renderAll() {
+            const liveTable = document.getElementById('live-table');
+            let ins = 0, pends = 0;
+
+            liveData.forEach((s, i) => {
+                const row = document.createElement('tr');
+                let statusHtml = '';
+                
+                if(s.status === 'Done') {
+                    statusHtml = `<span class="status-dot" style="background: var(--text-mute)"></span> Finished`;
+                } else if(s.status === 'Active') {
+                    statusHtml = `<span class="status-dot pulse" style="background: var(--success)"></span> In Campus`;
+                    ins++; pends++;
+                } else {
+                    statusHtml = `<span class="status-dot pulse" style="background: var(--warning)"></span> Tapping...`;
+                }
+
+                row.innerHTML = `
+                    <td><strong>${s.name}</strong></td>
+                    <td>${s.in || '--:--'}</td>
+                    <td>${s.out || '<span style="opacity:0.4; font-size:0.8rem">(not timed out)</span>'}</td>
+                    <td>${statusHtml}</td>
+                `;
+                liveTable.appendChild(row);
+            });
+
+            document.getElementById('count-in').innerText = ins;
+            document.getElementById('count-pending').innerText = pends;
+
+            // Render March History
+            const marchTable = document.getElementById('march-history-table');
+            historyData.filter(d => !d.month).forEach(d => {
+                marchTable.innerHTML += `<tr><td>${d.date}</td><td>${d.name}</td><td>${d.in}</td><td>${d.out}</td></tr>`;
+            });
+
+            // Render Feb Archive
+            const febTable = document.getElementById('feb-table');
+            historyData.filter(d => d.month === "Feb").forEach(d => {
+                febTable.innerHTML += `<tr><td>${d.date}</td><td>${d.name}</td><td>${d.in}</td><td>${d.out}</td><td><span class="history-tag">ARCHIVED</span></td></tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
